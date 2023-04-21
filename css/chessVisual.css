@@ -1,0 +1,65 @@
+.field {
+    width: 618px;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+.field [class^=line] {
+    border: 1px solid black;
+}
+
+[class^=line]  span {
+    border: 1px solid black;
+
+    width: 50px;
+    height: 50px;
+    padding: 5px 10px 5px 15px;
+    display: inline-block;
+}
+
+.reload {
+    background: #c1e1be;
+    border: 1px solid black;
+    border-radius: 10px;
+    font-size: 16px;
+    padding: 3px;
+    opacity: 0.7;
+    float: right;
+    cursor: pointer;
+    margin-left: auto;
+    margin-right: 40px;
+}
+
+.reload:hover {
+    opacity: 1;
+}
+
+.highlighting {
+    background: #d9aaaa;
+}
+
+.highlightingActive {
+    background: #794d3c;
+}
+
+img { border-radius: 5px; }
+
+.gameStatistics {
+    width: 620px;
+    margin-top: 10px;
+    display: flex;
+}
+.move {
+    font-size: 16px;
+    font-weight: bold;
+    padding: 3px;
+    border: 1px solid black;
+    border-radius: 10px;
+}
+@media (min-width: 1000px) {
+
+    .gameStatistics {
+        margin-left: 35%;
+    }
+}
