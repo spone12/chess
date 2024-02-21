@@ -1,6 +1,6 @@
 /**
  * Chess
- * Version 0.6
+ * Version 0.8
  */
 var movePlayer = 0;
 var gameOver = 0;
@@ -53,7 +53,6 @@ var gridFigure = {
  * Document ready
  */
 $(document).ready(function () {
-
     renderGrid();
 
     // Reload the game
@@ -66,8 +65,7 @@ $(document).ready(function () {
 
         let id = $(e.target).attr('id');
         if (id !== undefined) {
-
-          moveFigure(id);
+            moveFigure(id);
         }
     });
 });
@@ -79,14 +77,15 @@ $(document).ready(function () {
 function moveFigure(id) {
 
     if (id !== undefined) {
-
+        markEatenFigure(id);
         $('.highlightingActive').removeClass('highlightingActive');
         $('.highlighting').removeClass('highlighting');
         let filterActiveFigure = $('img[activeFigure=true]');
 
         let thisChessHtml = filterActiveFigure[0].outerHTML;
         let figure = filterActiveFigure.parent().attr('figure');
-        let side = filterActiveFigure.parent().attr('side');
+        let side   = filterActiveFigure.parent().attr('side');
+
         filterActiveFigure.attr('src', 'img/background.png').parent().attr('figure', 'background');
         $('#' + id).html(thisChessHtml).attr('figure', figure).attr('side', side);
         filterActiveFigure.removeAttr('activeFigure');
@@ -97,7 +96,6 @@ function moveFigure(id) {
 
             let cell = filterActiveFigure.parent().attr('cellnumber');
             if (!gridFigure[side]['pawnFirstMove'].includes(cell) && (gridFigure[side].hasOwnProperty(cell))) {
-
                 gridFigure[side]['pawnFirstMove'].push(cell);
             }
         }
@@ -111,7 +109,25 @@ function moveFigure(id) {
             movePlayer = 0;
             $('.move').html(sideMoveNext + ' move');
         };
+    }
+}
 
+/**
+ * Mark the eaten figure
+ * @param {int} id
+ */
+function markEatenFigure (id) {
+    // Get link to image
+    let srcFigure = $('#' + id).find("[src]").attr('src');
+    if (!srcFigure.includes('background')) {
+
+        let side = 'White';
+        if (srcFigure.includes('Black')) {
+            side = 'Black';
+        }
+
+        let htmlEatedFigure = '<img class="eated" width="30" src="' + srcFigure + '">';
+        $('.eatenFigures__' + side).append(htmlEatedFigure);
     }
 }
 
@@ -134,7 +150,6 @@ function tracePath (obj) {
 
     // Delete active highlighting
     if (object.hasClass('highlightingActive')) {
-
         $('.highlighting').removeClass('highlighting');
         $('.highlightingActive').removeClass('highlightingActive');
         return;
@@ -145,7 +160,7 @@ function tracePath (obj) {
          return;
      }
 
-    let cell = Number(object.attr('cellNumber'));
+     let cell = Number(object.attr('cellNumber'));
 
     // Delete active highlighting
     $('.highlighting').removeClass('highlighting');
@@ -183,7 +198,6 @@ function tracePath (obj) {
             kingMove(cell);
             break;
     }
-
     сheckKingNoMove($(object).attr('side'));
 }
 
@@ -193,7 +207,6 @@ function tracePath (obj) {
 function renderGrid() {
 
     for ( let i = 1; i <= 8; i++) {
-
         grid += '<div class="line' + i + '">';
         for ( let j = i * 10; j < (i * 10) + 8; j++) {
 
@@ -201,7 +214,6 @@ function renderGrid() {
             let side = '';
 
             $.each(gridFigure, function (key, value) {
-
                 if (value[j] !== undefined) {
                     side = key;
                     figure = value[j] + side + extensionImg;
@@ -216,7 +228,6 @@ function renderGrid() {
         }
         grid += '</div>';
     }
-
     $('.field').html(grid);
 }
 
@@ -231,7 +242,6 @@ function kingMove(cell) {
     let arrayMoveKing = [11, 10, 9, 1, -1, -10, -9, -11];
 
     $.each(arrayMoveKing, function (key, value) {
-
         let calcCell =  cell - value;
         let filter = $('span[cellNumber=' + calcCell + ']');
         if (filter.attr('figure') === 'background' || filter.attr('side') === sideNeed) {
@@ -245,7 +255,6 @@ function kingMove(cell) {
  * @param cell
  */
 function queenMove(cell) {
-
     elephantMove(cell);
     rookMove(cell);
 }
@@ -258,33 +267,85 @@ function elephantMove(cell) {
 
     let side = $('span[cellNumber=' + cell + ']').attr('side');
     let sideNeed = (side === 'White') ? 'Black' : 'White';
-    let arrayMoveElephant = [-11, -9, 11, 9];
-    let sideBlocked = [];
 
-    for (i = 2; i <= 6; i++ ) {
+    // Top right diagonal
+    for (i = 1; i <= 7; i++) {
+        let calcCell = cell - (i * 9);
+        checkBorder = Number(calcCell.toString().substr(1, 1));
 
-        $.each(arrayMoveElephant, function (key, value) {
+        if (checkBorder > 7) {
+            break;
+        }
 
-            let calcCell = cell + (i * value) - value;
-            if (calcCell >= 10 && calcCell <= 90 && !sideBlocked.includes(key)) {
-
-                    let filter = $('span[cellNumber=' + calcCell + ']');
-                    if (filter.attr('figure') === 'background' || filter.attr('side') === sideNeed) {
-                        filter.attr('class', 'highlighting');
-                    }
-
-                    // block the lines if collision
-                    if (
-                        filter.attr('side') === sideNeed ||
-                        (filter.attr('side') !== 'undefined' && filter.attr('side') === side)
-                    ) {
-
-                        sideBlocked.push(key);
-                    }
-                }
-
-        });
+        if (!renderDiagonalMove(calcCell, side, sideNeed)) {
+            break;
+        }
     }
+
+    // Bottom left diagonal
+    for (i = 1; i <= 7; i++) {
+        let calcCell = cell - (i * -9);
+
+        if (!renderDiagonalMove(calcCell, side, sideNeed)) {
+            break;
+        }
+
+        checkBorder = Number(calcCell.toString().substr(1, 1));
+        if (checkBorder == 0 || checkBorder > 7) {
+            break;
+        }
+    }
+
+    // Bottom right diagonal
+    for (i = 1; i <= 7; i++) {
+        let calcCell = cell - (i * -11);
+
+        checkBorder = Number(calcCell.toString().substr(1, 1));
+        if (checkBorder > 7) {
+            break;
+        }
+
+        if (!renderDiagonalMove(calcCell, side, sideNeed)) {
+            break;
+        }
+    }
+
+    // Top left diagonal
+    for (i = 1; i <= 7; i++) {
+        let calcCell = cell - (i * 11);
+
+        checkBorder = Number(calcCell.toString().substr(1, 1));
+        if (checkBorder > 7) {
+            break;
+        }
+
+        if (!renderDiagonalMove(calcCell, side, sideNeed)) {
+            break;
+        }
+    }
+}
+
+/**
+ * Render diagonal move
+ * @param   {int} calcCell
+ * @param   {string} side
+ * @param   {string} sideNeed
+ * @returns {boolean}
+ */
+function renderDiagonalMove (calcCell, side, sideNeed) {
+    if (calcCell >= 10 && calcCell <= 90) {
+        let filter = $('span[cellNumber=' + calcCell + ']');
+        if (filter.attr('figure') === 'background' || filter.attr('side') === sideNeed) {
+            filter.attr('class', 'highlighting');
+        }
+        if (
+            filter.attr('side') === sideNeed ||
+            (filter.attr('side') !== 'undefined' && filter.attr('side') === side)
+        ) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
@@ -364,16 +425,16 @@ function pawnMove(cell) {
 
 /**
  * The logic of moving pawns one square away
- * @param {int} i
- * @param {string} side
- * @param {string} sideNeed
- * @param {int} toCell
- * @param {boolean} isDoubleMove
+ * @param   {int} i
+ * @param   {string} side
+ * @param   {string} sideNeed
+ * @param   {int} toCell
+ * @param   {boolean} isDoubleMove
  * @returns {boolean}
  */
 function logicOneCellMovement (i, side, sideNeed, toCell, isDoubleMove) {
 
-    for ( let j = i - 1; j <= i + 1; j++) {
+    for (let j = i - 1; j <= i + 1; j++) {
 
         // In a double move, can't eat pieces on the right and left
         if (isDoubleMove && (j == Number(toCell - 1) || j == Number(toCell + 1))) {
@@ -385,7 +446,7 @@ function logicOneCellMovement (i, side, sideNeed, toCell, isDoubleMove) {
         // If the allied piece is in front, this move is double, then stop drawing
         if (isDoubleMove && filter.attr('side') == side && j == i) {
             return true;
-        } else if( j !== i && filter.attr('figure') !== 'background' && filter.attr('side') === sideNeed) {
+        } else if (j !== i && filter.attr('figure') !== 'background' && filter.attr('side') === sideNeed) {
             filter.attr('class', 'highlighting');
         } else if (j === i && filter.attr('figure') === 'background' && filter.attr('side') !== sideNeed) {
             filter.attr('class', 'highlighting');
@@ -425,16 +486,13 @@ function horizontalLeftMovement (cell, side, sideNeed, line) {
 
     // Left
     for (i = cell; i >= Number(line + 0); i -= 1) {
-
         let filter = $('span[cellNumber=' + i + ']');
         if (i !== cell) {
-
             let currentSide = filter.attr('side');
             if (currentSide === side)
                 break;
 
             if (currentSide !== 'background' && sideNeed === currentSide) {
-
                 filter.attr('class', 'highlighting');
                 break;
             }
@@ -454,16 +512,13 @@ function horizontalRightMovement (cell, side, sideNeed, line) {
 
     // Right
     for (i = cell; i <= Number(line + 7); i += 1) {
-
         let filter = $('span[cellNumber=' + i + ']');
         if (i !== cell) {
-
             let currentSide = filter.attr('side');
             if (currentSide === side)
                 break;
 
             if (currentSide !== 'background' && sideNeed === currentSide) {
-
                 filter.attr('class', 'highlighting');
                 break;
             }
@@ -482,16 +537,13 @@ function verticalTopMovement (cell, side, sideNeed) {
 
     // Top
     for (i = cell; i >= 10; i -= 10) {
-
         let filter = $('span[cellNumber=' + i + ']');
         if (i !== cell) {
-
             let currentSide = filter.attr('side');
             if (currentSide === side)
                 break;
 
             if (currentSide !== 'background' && sideNeed === currentSide) {
-
                 filter.attr('class', 'highlighting');
                 break;
             }
@@ -533,6 +585,11 @@ function verticalBottomMovement (cell, side, sideNeed) {
  */
 function checkMove(obj) {
 
+    // Dont check move
+    if ($('.checkDCM').is(':checked')) {
+        return true;
+    }
+
     if (movePlayer === 0 && obj.attr('side') === 'Black') {
         return false;
     } else if (movePlayer === 1 && obj.attr('side') === 'White') {
@@ -557,7 +614,6 @@ function сheckKingNoMove(currentSide) {
         let cell = $(obj).attr('cellnumber');
 
         $.each(arrayMoveKing, function (keyMove, value) {
-
             let calcCell =  cell - value;
             let filter = $('span[cellNumber=' + calcCell + ']');
             if (!filter.hasClass('highlighting') && (filter.attr('figure') === 'background' || filter.attr('side') === sideNeed)) {

@@ -5,13 +5,19 @@
     <script src="js/chessLogic.js"></script>
     <link rel="stylesheet" href="css/chessVisual.css">
 </head>
-<body>
-    <div>
-        <div class="field"></div>
-        <div class="gameStatistics">
-            <div class="move">White move</div>
-            <div class="reload">Reload</div>
+    <body>
+        <div class="mainField">
+            <span class="eatenFigures__White"></span>
+            <span class="field"></span>
+            <span class="eatenFigures__Black"></span>
         </div>
-    </div>
-</body>
+            <div class="gameStatistics">
+                <div class="move">White move</div>
+                <div class="nav">
+                    Don't check move <input class='checkDCM' type="checkbox" />
+                    <div class="reload">Reload</div>
+                </div>
+            </div>
+        </div>
+    </body>
 </html>

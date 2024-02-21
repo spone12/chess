@@ -1,3 +1,14 @@
+.mainField {
+    display: flex;
+    align-items: center;
+}
+
+.mainField > span {
+    text-align: center !important;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .field {
     width: 618px;
     margin-left: auto;
@@ -9,9 +20,31 @@
     border: 1px solid black;
 }
 
+.gameStatistics {
+    width: 618px;
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+.nav {
+    height: 35px;
+    padding-top: 5px;
+}
+
+.eatenFigures__Black, .eatenFigures__White {
+    width: 30px;
+    text-align: right;
+    margin-left: -1px;
+}
+
+.eated {
+    background: #ff2a2a;
+}
+
 [class^=line]  span {
     border: 1px solid black;
-
     width: 50px;
     height: 50px;
     padding: 5px 10px 5px 15px;
@@ -45,20 +78,15 @@
 
 img { border-radius: 5px; }
 
-.gameStatistics {
-    width: 620px;
-    margin-top: 10px;
-    display: flex;
-}
 .move {
     font-size: 16px;
     font-weight: bold;
     padding: 3px;
     border: 1px solid black;
     border-radius: 10px;
+    width: 135px;
 }
 @media (min-width: 1000px) {
-
     .gameStatistics {
         margin-left: 35%;
     }
