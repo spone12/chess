@@ -2,11 +2,15 @@
  * Chess
  * Version 0.8
  */
+
 var movePlayer = 0;
 var gameOver = 0;
 var grid = '';
 var extensionImg = '.png';
 var sideMoveWhite = true;
+var stackChangeFigures = [];
+var gameIsLocked = 0;
+
 var gridFigure = {
 
     'Black': {
@@ -68,6 +72,10 @@ $(document).ready(function () {
             moveFigure(id);
         }
     });
+
+    $(".changeFigure").on('click', function () {
+        changeFigure($(this).attr('id'))
+    });
 });
 
 /**
@@ -76,39 +84,77 @@ $(document).ready(function () {
  */
 function moveFigure(id) {
 
-    if (id !== undefined) {
-        markEatenFigure(id);
-        $('.highlightingActive').removeClass('highlightingActive');
-        $('.highlighting').removeClass('highlighting');
-        let filterActiveFigure = $('img[activeFigure=true]');
+    if (id === undefined) {
+        return;
+    }
 
-        let thisChessHtml = filterActiveFigure[0].outerHTML;
-        let figure = filterActiveFigure.parent().attr('figure');
-        let side   = filterActiveFigure.parent().attr('side');
+    markEatenFigure(id);
+    $('.highlightingActive').removeClass('highlightingActive');
+    $('.highlighting').removeClass('highlighting');
+    let filterActiveFigure = $('img[activeFigure=true]');
 
-        filterActiveFigure.attr('src', 'img/background.png').parent().attr('figure', 'background');
-        $('#' + id).html(thisChessHtml).attr('figure', figure).attr('side', side);
-        filterActiveFigure.removeAttr('activeFigure');
-        filterActiveFigure.parent().attr('side', '');
+    let thisChessHtml = filterActiveFigure[0].outerHTML;
+    let figure = filterActiveFigure.parent().attr('figure');
+    let side   = filterActiveFigure.parent().attr('side');
 
-        // Check the first move of a pawn on 2 squares
-        if (figure.includes('pawn')) {
+    filterActiveFigure.attr('src', 'img/background.png').parent().attr('figure', 'background');
+    $('#' + id).html(thisChessHtml).attr('figure', figure).attr('side', side);
+    filterActiveFigure.removeAttr('activeFigure');
+    filterActiveFigure.parent().attr('side', '');
 
-            let cell = filterActiveFigure.parent().attr('cellnumber');
-            if (!gridFigure[side]['pawnFirstMove'].includes(cell) && (gridFigure[side].hasOwnProperty(cell))) {
-                gridFigure[side]['pawnFirstMove'].push(cell);
+    // Pawn
+    if (figure.includes('pawn')) {
+        movePawnFigureCheck(filterActiveFigure, id, side);
+    }
+
+    // Assign a move to an opponent
+    let sideMoveNext = (side === 'White') ? 'Black' : 'White';
+    if (movePlayer == 0) {
+        movePlayer = 1;
+        $('.move').html(sideMoveNext + ' move');
+    } else {
+        movePlayer = 0;
+        $('.move').html(sideMoveNext + ' move');
+    };
+}
+
+/**
+ * Check logic move pawn figure
+ * @param {object} filterActiveFigure
+ * @param {string} filterActiveFigure
+ * @param {string} side
+ */
+function movePawnFigureCheck(filterActiveFigure, id, side) {
+
+    let cell = filterActiveFigure.parent().attr('cellnumber');
+
+    // Check the first move of a pawn on 2 squares
+    if (!gridFigure[side]['pawnFirstMove'].includes(cell) && (gridFigure[side].hasOwnProperty(cell))) {
+        gridFigure[side]['pawnFirstMove'].push(cell);
+    }
+
+    // Check enemy pawn reach the base
+    let cellReached = $('#' + id).attr('cellnumber');
+    checkEnemyBaseReached = Number(cellReached.toString().substr(0, 1));
+
+    if (checkEnemyBaseReached == 1 || checkEnemyBaseReached == 8) {
+        stackChangeFigures.push({
+            cell: id,
+            side: side,
+            cellTo: -1,
+            sideTo: -1,
+        });
+        $('.changeFigure' + side).show();
+        gameIsLocked = 1;
+
+        // Check figure replaced
+        var checkChoisedFigure = setInterval(function () {
+            var figureReplaced = $('.changeFigureWhite, .changeFigureBlack').is(':visible');
+            if (!figureReplaced) {
+                gameIsLocked = 0;
+                clearInterval(checkChoisedFigure);
             }
-        }
-
-        // Assign a move to an opponent
-        let sideMoveNext = (side === 'White') ? 'Black' : 'White';
-        if (movePlayer == 0) {
-            movePlayer = 1;
-            $('.move').html(sideMoveNext + ' move');
-        } else {
-            movePlayer = 0;
-            $('.move').html(sideMoveNext + ' move');
-        };
+        }, 500);
     }
 }
 
@@ -136,6 +182,10 @@ function markEatenFigure (id) {
  * @param {object} obj
  */
 function tracePath (obj) {
+
+    if (gameIsLocked) {
+        return;
+    }
 
     let object = $(obj).parent();
     if ($(object).hasClass('highlighting')) {
@@ -205,8 +255,7 @@ function tracePath (obj) {
  * Drawing a grid and figures
  */
 function renderGrid() {
-
-    for ( let i = 1; i <= 8; i++) {
+    for (let i = 1; i <= 8; i++) {
         grid += '<div class="line' + i + '">';
         for ( let j = i * 10; j < (i * 10) + 8; j++) {
 
@@ -229,6 +278,45 @@ function renderGrid() {
         grid += '</div>';
     }
     $('.field').html(grid);
+    renderChangeFigure();
+}
+
+/**
+ * Draw a selection of shape changes
+ */
+function renderChangeFigure () {
+    let changeFigure = ['queen', 'horse', 'rook', 'elephant'];
+    $.each(changeFigure, function (key, value) {
+        for (i = 1; i <= 2; i++) {
+            let side = (i == 1) ? 'White' : 'Black';
+            let imgSrc = 'img/' + value + side +  extensionImg;
+            let grid = '<span class="changeFigure" figure="' + value + side + '" id="changeFigure_' + value + side + '">' +
+                "<img width=45 src='" + imgSrc + "' />"
+                + '</span>';
+            $('.changeFigure' + side).append(grid);
+        }
+    });
+}
+
+/**
+ * Change figure
+ * @param {string} cell
+ */
+function changeFigure (cell) {
+    if (stackChangeFigures.length > 0) {
+        $.each(stackChangeFigures, function (k, item) {
+
+            // If replace the pawn to another figure
+            if ($(item)[0]['cellTo'] == -1) {
+                let figureNeed = cell.split('_')[1];
+                let cellNeed = $(item)[0]['cell'];
+                $('#' + cellNeed).attr('figure', figureNeed);
+                $('#' + cellNeed).children().attr('src', 'img/' + figureNeed + extensionImg);
+                $('.changeFigureWhite, .changeFigureBlack').hide();
+                stackChangeFigures.shift();
+            }
+        });
+    }
 }
 
 /**

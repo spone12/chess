@@ -1,6 +1,7 @@
 .mainField {
     display: flex;
     align-items: center;
+    height: 660px;
 }
 
 .mainField > span {
@@ -85,9 +86,31 @@ img { border-radius: 5px; }
     border: 1px solid black;
     border-radius: 10px;
     width: 135px;
+    text-align: center;
 }
+
 @media (min-width: 1000px) {
     .gameStatistics {
         margin-left: 35%;
     }
+}
+
+.changeFigure {
+    cursor: pointer;
+    border: 1px solid #e1e1e1;
+    padding-left: 15px;
+    padding-bottom: 5px;
+    text-align: center;
+    padding-right: 15px;
+    margin-bottom: 10px;
+}
+
+.changeFigureWhite {
+    text-align: center;
+    padding-bottom: 6px;
+    display: none;
+}
+.changeFigureBlack {
+    text-align: center;
+    display: none;
 }
