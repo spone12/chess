@@ -1,6 +1,6 @@
 /**
  * Chess
- * Version 0.8
+ * Version 0.8.3
  */
 
 var movePlayer = 0;
@@ -10,6 +10,7 @@ var extensionImg = '.png';
 var sideMoveWhite = true;
 var stackChangeFigures = [];
 var gameIsLocked = 0;
+var moves = [];
 
 var gridFigure = {
 
@@ -88,14 +89,21 @@ function moveFigure(id) {
         return;
     }
 
-    markEatenFigure(id);
+    let isEaten = markEatenFigure(id);
     $('.highlightingActive').removeClass('highlightingActive');
     $('.highlighting').removeClass('highlighting');
-    let filterActiveFigure = $('img[activeFigure=true]');
 
+    let filterActiveFigure = $('img[activeFigure=true]');
     let thisChessHtml = filterActiveFigure[0].outerHTML;
     let figure = filterActiveFigure.parent().attr('figure');
     let side   = filterActiveFigure.parent().attr('side');
+    let currentMove = {
+        'cellFrom'  : filterActiveFigure.parent().attr('id'),
+        'objFrom'   : filterActiveFigure.parent()[0].outerHTML,
+        'cellTo'    : id,
+        'objTo'     : $('#' + id)[0].outerHTML,
+        'isEaten'   : isEaten
+    };
 
     filterActiveFigure.attr('src', 'img/background.png').parent().attr('figure', 'background');
     $('#' + id).html(thisChessHtml).attr('figure', figure).attr('side', side);
@@ -116,6 +124,36 @@ function moveFigure(id) {
         movePlayer = 0;
         $('.move').html(sideMoveNext + ' move');
     };
+
+    moves.push(currentMove);
+}
+
+/**
+ * Roll back move
+ * @param None
+ */
+function prevMove() {
+    if (!moves.length) {
+        return;
+    }
+
+    let prevMoveObj = moves.pop();
+    let isEaten = prevMoveObj.isEaten;
+    let side = (movePlayer == 0) ? 'Black' : 'White';
+    $('#' + prevMoveObj.cellFrom)[0].outerHTML = prevMoveObj.objFrom;
+    $('#' + prevMoveObj.cellTo)[0].outerHTML = prevMoveObj.objTo;
+
+    // Change side move
+    if (movePlayer == 0) {
+        movePlayer = 1;
+    } else {
+        movePlayer = 0;
+    };
+
+    $('.move').html(side + ' move');
+    if (isEaten) {
+        $('.eatenFigures__' + (side == 'Black' ? 'White' : 'Black') + ' img:last').remove();
+    }
 }
 
 /**
@@ -174,7 +212,9 @@ function markEatenFigure (id) {
 
         let htmlEatedFigure = '<img class="eated" width="30" src="' + srcFigure + '">';
         $('.eatenFigures__' + side).append(htmlEatedFigure);
+        return true;
     }
+    return false;
 }
 
 /**
@@ -470,41 +510,38 @@ function pawnMove(cell) {
     // Double step in the first move of a pawn
     let isDoubleMove = false;
     if (!gridFigure[side]['pawnFirstMove'].includes(cell) && (gridFigure[side].hasOwnProperty(cell))) {
-
         cage = 20;
         isDoubleMove = true;
     }
 
     // Side Black
     if (side === 'Black') {
-
         toCell = Number(cell + cage);
         let i = cell;
         if (!isDoubleMove)
             i = toCell;
 
         for (i; i <= toCell; i += 10) {
-
             if (isDoubleMove && i == cell) {
                 continue;
             }
-            isStopDrawMove = logicOneCellMovement(i, side, sideNeed, toCell, isDoubleMove);
+
+            isStopDrawMove = oneCellPawnMovement(i, side, sideNeed, toCell, isDoubleMove);
             if (isStopDrawMove)
                 break;
         }
     } else {
-
         toCell = Number(cell - cage);
         let i = cell;
         if (!isDoubleMove)
             i = toCell;
 
         for (i; i >= toCell; i -= 10) {
-
             if (isDoubleMove && i == cell) {
                 continue;
             }
-            isStopDrawMove = logicOneCellMovement(i, side, sideNeed, toCell, isDoubleMove);
+
+            isStopDrawMove = oneCellPawnMovement(i, side, sideNeed, toCell, isDoubleMove);
             if (isStopDrawMove)
                 break;
         }
@@ -520,10 +557,9 @@ function pawnMove(cell) {
  * @param   {boolean} isDoubleMove
  * @returns {boolean}
  */
-function logicOneCellMovement (i, side, sideNeed, toCell, isDoubleMove) {
+function oneCellPawnMovement (i, side, sideNeed, toCell, isDoubleMove) {
 
     for (let j = i - 1; j <= i + 1; j++) {
-
         // In a double move, can't eat pieces on the right and left
         if (isDoubleMove && (j == Number(toCell - 1) || j == Number(toCell + 1))) {
             continue;
@@ -557,112 +593,55 @@ function rookMove(cell) {
     let sideNeed = (side === 'White') ? 'Black' : 'White';
     let line = filter.attr('line');
 
-    horizontalLeftMovement(cell, side, sideNeed, line);
-    horizontalRightMovement(cell, side, sideNeed, line);
-    verticalTopMovement(cell, side, sideNeed);
-    verticalBottomMovement(cell, side, sideNeed);
-}
-
-/**
- * Horizontal left move
- * @param {int} cell
- * @param {string} side
- * @param {string} sideNeed
- * @param {int} line
- */
-function horizontalLeftMovement (cell, side, sideNeed, line) {
-
-    // Left
+    // Horizontal left movement
     for (i = cell; i >= Number(line + 0); i -= 1) {
-        let filter = $('span[cellNumber=' + i + ']');
-        if (i !== cell) {
-            let currentSide = filter.attr('side');
-            if (currentSide === side)
-                break;
-
-            if (currentSide !== 'background' && sideNeed === currentSide) {
-                filter.attr('class', 'highlighting');
-                break;
-            }
-            filter.attr('class', 'highlighting');
+        if (renderRockMovement(i, cell, side, sideNeed)) {
+            break;
         }
     }
-}
 
-/**
- * Horizontal right move
- * @param {int} cell
- * @param {string} side
- * @param {string} sideNeed
- * @param {int} line
- */
-function horizontalRightMovement (cell, side, sideNeed, line) {
-
-    // Right
+    // Horizontal right movement
     for (i = cell; i <= Number(line + 7); i += 1) {
-        let filter = $('span[cellNumber=' + i + ']');
-        if (i !== cell) {
-            let currentSide = filter.attr('side');
-            if (currentSide === side)
-                break;
-
-            if (currentSide !== 'background' && sideNeed === currentSide) {
-                filter.attr('class', 'highlighting');
-                break;
-            }
-            filter.attr('class', 'highlighting');
+        if (renderRockMovement(i, cell, side, sideNeed)) {
+            break;
         }
     }
-}
 
-/**
- * Vertical top move
- * @param {int} cell
- * @param {string} side
- * @param {string} sideNeed
- */
-function verticalTopMovement (cell, side, sideNeed) {
-
-    // Top
+    // Vertical top movement
     for (i = cell; i >= 10; i -= 10) {
-        let filter = $('span[cellNumber=' + i + ']');
-        if (i !== cell) {
-            let currentSide = filter.attr('side');
-            if (currentSide === side)
-                break;
+        if (renderRockMovement(i, cell, side, sideNeed)) {
+            break;
+        }
+    }
 
-            if (currentSide !== 'background' && sideNeed === currentSide) {
-                filter.attr('class', 'highlighting');
-                break;
-            }
-            filter.attr('class', 'highlighting');
+    // Vertical bottom movement
+    for (i = cell; i <= 90; i += 10) {
+        if (renderRockMovement(i, cell, side, sideNeed)) {
+            break;
         }
     }
 }
 
 /**
- * Vertical bottom move
+ * Render rock movement
+ *
+ * @param {int} i
  * @param {int} cell
  * @param {string} side
  * @param {string} sideNeed
  */
-function verticalBottomMovement (cell, side, sideNeed) {
+function renderRockMovement(i, cell, side, sideNeed) {
+    let filter = $('span[cellNumber=' + i + ']');
+    if (i !== cell) {
+        let currentSide = filter.attr('side');
+        if (currentSide === side)
+            return true;
 
-    // Bottom
-    for (i = cell; i <= 90; i += 10) {
-
-        let filter = $('span[cellNumber=' + i + ']');
-        if (i !== cell) {
-            let currentSide = filter.attr('side');
-            if (currentSide === side)
-                break;
-
-            if (currentSide !== 'background' && sideNeed === currentSide) {
-                filter.attr('class', 'highlighting');
-                break;
-            }
+        if (currentSide !== 'background' && sideNeed === currentSide) {
             filter.attr('class', 'highlighting');
+            return true;
         }
+        filter.attr('class', 'highlighting');
     }
 }
 

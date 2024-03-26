@@ -114,3 +114,10 @@ img { border-radius: 5px; }
     text-align: center;
     display: none;
 }
+
+.prevMove {
+    margin-left: 10px;
+}
+.prevMove > input {
+    width: 30px;
+}
