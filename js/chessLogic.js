@@ -79,6 +79,81 @@ $(document).ready(function () {
     });
 });
 
+
+/**
+ * Drawing a grid and figures
+ */
+function renderGrid() {
+    // Horizontal cell names array
+    let horizontalCellNames = Array.from({length: 9}, (_, i) => String.fromCharCode('A'.charCodeAt(0) + i));
+    horizontalCellNames.unshift('');
+    
+    // Vertical number cells array
+    let verticalNumberCells = Array.from({length: 8}, (_, i) => i + 1);
+
+    for (let i = 1; i <= 8; i++) {
+
+        // Draw the horizontal cell names
+        if (i == 1) {
+            for (let j = 0; j < 9; j++) {
+                grid += '<span class="horizontalCellNames">' + horizontalCellNames[j] + '</span>';
+            }
+        }
+
+        grid += '<div class="line' + i + '">';
+        for (let j = i * 10; j < (i * 10) + 8; j++) {
+
+            // Draw a vertical cell numbers
+            if (j == i * 10) {
+                grid += '<span class="verticalNumberCells">' + verticalNumberCells.pop() + '</span>';
+            }
+
+            let figure = 'background.png';
+            let side = '';
+
+            $.each(gridFigure, function (key, value) {
+                if (value[j] !== undefined) {
+                    side = key;
+                    figure = value[j] + side + extensionImg;
+                }
+            });
+
+            let imgSrc = 'img/' + figure;
+            let figureName = figure.split('.')[0];
+            grid += '<span side="' + side + '" figure="' + figureName + '" id="line' + i + '__с' + j + '" line=' + i + ' cellNumber="' + j + '">' +
+                "<img class='imgFigure' onclick='tracePath(this);' width=45 src='" + imgSrc + "' />"
+                + '</span>';
+        }
+        grid += '</div>';
+    }
+    $('.field').html(grid);
+    renderMesh();
+    renderChangeFigure();
+}
+
+/**
+ * Render a grid mesh
+ */
+function renderMesh() {
+    for (let i = 1; i <= 8; i++) {
+        for (let j = i * 10; j < (i * 10) + 8; j++) {
+            // Render class background mesh
+            let gridMesh = '';
+            if (j % 2 != 0) {
+                if (i % 2 != 0) {
+                    gridMesh = 'gridMesh';
+                }
+            } else {
+                if (i % 2 == 0) {
+                    gridMesh = 'gridMesh';
+                }
+            }
+            let id = 'line' + i + '__с' + j;
+            $('#' + id).attr('class', gridMesh);
+        }
+    }
+}
+
 /**
  * Figure movement
  * @param {int} id
@@ -126,6 +201,7 @@ function moveFigure(id) {
     };
 
     moves.push(currentMove);
+    renderMesh();
 }
 
 /**
@@ -154,6 +230,7 @@ function prevMove() {
     if (isEaten) {
         $('.eatenFigures__' + (side == 'Black' ? 'White' : 'Black') + ' img:last').remove();
     }
+    renderMesh();
 }
 
 /**
@@ -210,7 +287,7 @@ function markEatenFigure (id) {
             side = 'Black';
         }
 
-        let htmlEatedFigure = '<img class="eated" width="30" src="' + srcFigure + '">';
+        let htmlEatedFigure = '<img width="30" src="' + srcFigure + '">';
         $('.eatenFigures__' + side).append(htmlEatedFigure);
         return true;
     }
@@ -248,6 +325,10 @@ function tracePath (obj) {
     // Check move
      if (!checkMove(object)) {
          return;
+     }
+
+     if ($('span').hasClass('highlightingActive')) {
+        renderMesh();
      }
 
      let cell = Number(object.attr('cellNumber'));
@@ -289,36 +370,6 @@ function tracePath (obj) {
             break;
     }
     сheckKingNoMove($(object).attr('side'));
-}
-
-/**
- * Drawing a grid and figures
- */
-function renderGrid() {
-    for (let i = 1; i <= 8; i++) {
-        grid += '<div class="line' + i + '">';
-        for ( let j = i * 10; j < (i * 10) + 8; j++) {
-
-            let figure = 'background.png';
-            let side = '';
-
-            $.each(gridFigure, function (key, value) {
-                if (value[j] !== undefined) {
-                    side = key;
-                    figure = value[j] + side + extensionImg;
-                }
-            });
-
-            let imgSrc = 'img/' + figure;
-            let figureName = figure.split('.')[0];
-            grid += '<span side="' + side + '" figure="' + figureName + '" id="line' + i + '__с' + j + '" line=' + i + ' cellNumber="' + j + '">' +
-                "<img onclick='tracePath(this);' width=45 src='" + imgSrc + "' />"
-                + '</span>';
-        }
-        grid += '</div>';
-    }
-    $('.field').html(grid);
-    renderChangeFigure();
 }
 
 /**

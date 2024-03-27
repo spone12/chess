@@ -11,18 +11,31 @@
 }
 
 .field {
-    width: 618px;
     margin-left: auto;
     margin-right: auto;
     display: block;
 }
 
-.field [class^=line] {
-    border: 1px solid black;
+.imgFigure {
+    margin-left: 3px;
+}
+
+.gridMesh {
+    background: #dcdcdc91;
+}
+
+.horizontalCellNames {
+    margin-left: 5px;
+    margin-right: 53px;
+}
+
+.verticalNumberCells {
+    width: 10px !important;
+    border: none !important;
 }
 
 .gameStatistics {
-    width: 618px;
+    width: 590px;
     margin-top: 10px;
     margin-left: auto;
     margin-right: auto;
@@ -40,15 +53,9 @@
     margin-left: -1px;
 }
 
-.eated {
-    background: #ff2a2a;
-}
-
 [class^=line]  span {
     border: 1px solid black;
-    width: 50px;
-    height: 50px;
-    padding: 5px 10px 5px 15px;
+    padding: 10px;
     display: inline-block;
 }
 
@@ -62,7 +69,7 @@
     float: right;
     cursor: pointer;
     margin-left: auto;
-    margin-right: 40px;
+    margin-right: 5px;
 }
 
 .reload:hover {
@@ -70,14 +77,16 @@
 }
 
 .highlighting {
-    background: #d9aaaa;
+    background: #e3c1c1;
+    border-radius: 4px;
+    opacity: 0.9;
 }
 
 .highlightingActive {
-    background: #794d3c;
+    background: #ffd78c;
+    border-radius: 4px;
+    opacity: 0.9;
 }
-
-img { border-radius: 5px; }
 
 .move {
     font-size: 16px;
