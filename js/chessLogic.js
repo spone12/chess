@@ -59,6 +59,7 @@ var gridFigure = {
  */
 $(document).ready(function () {
     renderGrid();
+    timer();
 
     // Reload the game
     $(".reload").click(function () {
@@ -87,7 +88,7 @@ function renderGrid() {
     // Horizontal cell names array
     let horizontalCellNames = Array.from({length: 9}, (_, i) => String.fromCharCode('A'.charCodeAt(0) + i));
     horizontalCellNames.unshift('');
-    
+
     // Vertical number cells array
     let verticalNumberCells = Array.from({length: 8}, (_, i) => i + 1);
 
@@ -152,6 +153,28 @@ function renderMesh() {
             $('#' + id).attr('class', gridMesh);
         }
     }
+}
+
+/**
+ * Match timer
+ */
+function timer() {
+    function prettyTimeString(num) {
+        return (num < 10 ? "0" : "") + num;
+    }
+
+    var start = new Date;
+    setInterval(function() {
+        let total_seconds = (new Date - start) / 1000;
+
+        let minutes = prettyTimeString(Math.floor(total_seconds / 60));
+        total_seconds = total_seconds % 60;
+
+        let seconds = prettyTimeString(Math.floor(total_seconds));
+        let currentTime = minutes + ":" + seconds;
+
+        $('.timer').text(currentTime);
+    }, 1000);
 }
 
 /**
@@ -319,6 +342,7 @@ function tracePath (obj) {
     if (object.hasClass('highlightingActive')) {
         $('.highlighting').removeClass('highlighting');
         $('.highlightingActive').removeClass('highlightingActive');
+        renderMesh();
         return;
     }
 

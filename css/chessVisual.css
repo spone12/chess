@@ -32,6 +32,8 @@
 .verticalNumberCells {
     width: 10px !important;
     border: none !important;
+    background: #fdf6f6;
+    border-radius: 10px 0px 0px 10px;
 }
 
 .gameStatistics {
@@ -129,4 +131,9 @@
 }
 .prevMove > input {
     width: 30px;
+}
+
+.timer {
+    float: right;
+    margin-right: 10px;
 }
