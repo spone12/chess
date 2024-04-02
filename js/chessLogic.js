@@ -1,6 +1,6 @@
 /**
  * Chess
- * Version 0.8.3
+ * Version 0.9
  */
 
 var movePlayer = 0;
@@ -11,16 +11,19 @@ var sideMoveWhite = true;
 var stackChangeFigures = [];
 var gameIsLocked = 0;
 var moves = [];
+var currentSideGlobal = 'White'
 
 var gridFigure = {
-
     'Black': {
         'pawnFirstMove': [],
+        'roque': {
+            'isRoque': 0
+        },
         10: 'rook',
         11: 'horse',
         12: 'elephant',
-        13: 'king',
-        14: 'queen',
+        13: 'queen',
+        14: 'king',
         15: 'elephant',
         16: 'horse',
         17: 'rook',
@@ -35,6 +38,9 @@ var gridFigure = {
     },
     'White': {
         'pawnFirstMove': [],
+        'roque': {
+            isRoque: 0
+        },
         70: 'pawn',
         71: 'pawn',
         72: 'pawn',
@@ -55,7 +61,7 @@ var gridFigure = {
 };
 
 /**
- * Document ready
+ * Document ready function
  */
 $(document).ready(function () {
     renderGrid();
@@ -78,11 +84,16 @@ $(document).ready(function () {
     $(".changeFigure").on('click', function () {
         changeFigure($(this).attr('id'))
     });
+
+    $(document).on('click', '.highlightingRoque', function () {
+        roque(this);
+    });
 });
 
 
 /**
  * Drawing a grid and figures
+ * @param None
  */
 function renderGrid() {
     // Horizontal cell names array
@@ -134,6 +145,7 @@ function renderGrid() {
 
 /**
  * Render a grid mesh
+ * @param None
  */
 function renderMesh() {
     for (let i = 1; i <= 8; i++) {
@@ -149,14 +161,23 @@ function renderMesh() {
                     gridMesh = 'gridMesh';
                 }
             }
-            let id = 'line' + i + '__с' + j;
-            $('#' + id).attr('class', gridMesh);
+
+            let objId = $('#line' + i + '__с' + j);
+            objId.attr('class', gridMesh);
+
+            let side = objId.attr('side');
+            if (side && side != currentSideGlobal) {
+                objId.children().removeClass('imgFigure').addClass('imgFigureDefault');
+            } else {
+                objId.children().removeClass('imgFigureDefault').addClass('imgFigure');
+            }
         }
     }
 }
 
 /**
  * Match timer
+ * @param None
  */
 function timer() {
     function prettyTimeString(num) {
@@ -181,7 +202,7 @@ function timer() {
  * Figure movement
  * @param {int} id
  */
-function moveFigure(id) {
+function moveFigure(id, isRoque = false) {
 
     if (id === undefined) {
         return;
@@ -208,20 +229,32 @@ function moveFigure(id) {
     filterActiveFigure.removeAttr('activeFigure');
     filterActiveFigure.parent().attr('side', '');
 
+    // Delete active highlighting
+    $('.highlighting').removeClass('highlighting');
+    $('img[activeFigure=true]').removeAttr('activeFigure');
+
     // Pawn
     if (figure.includes('pawn')) {
         movePawnFigureCheck(filterActiveFigure, id, side);
     }
 
-    // Assign a move to an opponent
-    let sideMoveNext = (side === 'White') ? 'Black' : 'White';
-    if (movePlayer == 0) {
-        movePlayer = 1;
-        $('.move').html(sideMoveNext + ' move');
-    } else {
-        movePlayer = 0;
-        $('.move').html(sideMoveNext + ' move');
-    };
+    // Roque
+    if (!gridFigure[side]['roque']['isRoque'] && (figure.includes('rook') || figure.includes('king'))) {
+        gridFigure[side]['roque']['isRoque'] = 1;
+    }
+
+    if (!isRoque) {
+        // Assign a move to an opponent
+        let sideMoveNext = (side === 'White') ? 'Black' : 'White';
+        if (movePlayer == 0) {
+            movePlayer = 1;
+            $('.move').html(sideMoveNext + ' move');
+        } else {
+            movePlayer = 0;
+            $('.move').html(sideMoveNext + ' move');
+        };
+        currentSideGlobal = sideMoveNext;
+    }
 
     moves.push(currentMove);
     renderMesh();
@@ -254,6 +287,44 @@ function prevMove() {
         $('.eatenFigures__' + (side == 'Black' ? 'White' : 'Black') + ' img:last').remove();
     }
     renderMesh();
+}
+
+/**
+ * Roque
+ * @param None
+ */
+function roque(obj) {
+    let cellNumber = $(obj).attr('cellnumber');
+    let side = $(obj).attr('side');
+    let roqueFigures = {
+        '10': {
+            firstCell: 'line1__с13',
+            secondCell: 'line1__с14',
+            highlight: 10
+        },
+        '17': {
+            firstCell: 'line1__с16',
+            secondCell: 'line1__с15',
+            highlight: 17
+        },
+        '80': {
+            firstCell: 'line8__с83',
+            secondCell: 'line8__с84',
+            highlight: 80
+        },
+        '87': {
+            firstCell: 'line8__с86',
+            secondCell: 'line8__с85',
+            highlight: 87
+        },
+    }
+
+    moveFigure(roqueFigures[cellNumber].firstCell, true);
+    $('span[cellNumber=' + roqueFigures[cellNumber].highlight + ']')
+        .attr('class', 'highlightingActive').children().attr('activeFigure', true);
+    moveFigure(roqueFigures[cellNumber].secondCell);
+
+    gridFigure[side]['roque']['isRoque'] = 1;
 }
 
 /**
@@ -359,7 +430,7 @@ function tracePath (obj) {
 
     // Delete active highlighting
     $('.highlighting').removeClass('highlighting');
-    $('img[activeFigure=true]').removeAttr('activeFigure')
+    $('img[activeFigure=true]').removeAttr('activeFigure');
 
     // Set active figure
     $(obj).attr('activeFigure', true);
@@ -398,6 +469,7 @@ function tracePath (obj) {
 
 /**
  * Draw a selection of shape changes
+ * @param None
  */
 function renderChangeFigure () {
     let changeFigure = ['queen', 'horse', 'rook', 'elephant'];
@@ -439,7 +511,6 @@ function changeFigure (cell) {
  * @param {int} cell
  */
 function kingMove(cell) {
-
     let side = $('span[cellNumber=' + cell + ']').attr('side');
     let sideNeed = (side === 'White') ? 'Black' : 'White';
     let arrayMoveKing = [11, 10, 9, 1, -1, -10, -9, -11];
@@ -451,6 +522,41 @@ function kingMove(cell) {
             filter.attr('class', 'highlighting');
         }
     });
+
+    // Roque highlighting
+    if (!gridFigure[side]['roque']['isRoque']) {
+        let cellHighlighting = [];
+        let cellsNotIncluding = [];
+
+        if (side == 'White') {
+            cellHighlighting = [80, 87];
+        } else {
+            cellHighlighting = [10, 17];
+        }
+
+        for (let i = cell - 1; i > cellHighlighting[0]; i--) {
+            if ($('span[id*="с' + i + '"]').attr('figure') != 'background') {
+                cellsNotIncluding.push(cellHighlighting[0]);
+                break;
+            }
+        }
+
+        for (let i = cell + 1; i < cellHighlighting[1]; i++) {
+            if ($('span[id*="с' + i + '"]').attr('figure') != 'background') {
+                cellsNotIncluding.push(cellHighlighting[1]);
+                break;
+            }
+        }
+
+        cellHighlighting.forEach((cell) => {
+            if (!cellsNotIncluding.includes(cell)) {
+                let rookObj = $('span[id*="с' + cell + '"]');
+                if (rookObj.attr('figure').includes('rook')) {
+                    rookObj.attr('class', 'highlightingRoque');
+                }
+            }
+        })
+    }
 }
 
 /**
@@ -588,7 +694,7 @@ function pawnMove(cell) {
         cage = 20;
         isDoubleMove = true;
     }
-
+    
     // Side Black
     if (side === 'Black') {
         toCell = Number(cell + cage);
@@ -709,8 +815,9 @@ function renderRockMovement(i, cell, side, sideNeed) {
     let filter = $('span[cellNumber=' + i + ']');
     if (i !== cell) {
         let currentSide = filter.attr('side');
-        if (currentSide === side)
+        if (currentSide === side) {
             return true;
+        }
 
         if (currentSide !== 'background' && sideNeed === currentSide) {
             filter.attr('class', 'highlighting');

@@ -20,6 +20,19 @@
     margin-left: 3px;
 }
 
+.imgFigure:not([src*='background']) {
+    cursor: pointer;
+}
+
+.imgFigureDefault {
+    margin-left: 3px;
+    cursor: default;
+}
+
+.highlighting > .imgFigureDefault {
+    cursor: pointer;
+}
+
 .gridMesh {
     background: #dcdcdc91;
 }
@@ -82,12 +95,20 @@
     background: #e3c1c1;
     border-radius: 4px;
     opacity: 0.9;
+    cursor: pointer !important;
 }
 
 .highlightingActive {
     background: #ffd78c;
     border-radius: 4px;
     opacity: 0.9;
+}
+
+.highlightingRoque {
+    background: #cae3c1;
+    border-radius: 4px;
+    opacity: 0.9;
+    cursor: col-resize;
 }
 
 .move {
